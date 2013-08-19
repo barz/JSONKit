@@ -2598,8 +2598,23 @@ static int jk_encode_add_atom_to_buffer(JKEncodeState *encodeState, void *object
   //     
   // XXX XXX XXX XXX
 
-
+    // FIXME: Hsoi 2013-08-19 - Need to deal with this compiler issue.
+    //
+    // This workaround generates a warning about bitmasking for introspection of ObjC object pointers is strongly discouraged.
+    // Not unreasonable at all. Alas, we cannot tell what the state of JSONKit is -- the developer is unresponsive.
+    // There have been other issues as well with JSONKit as the OS has moved forward. We can deal with them, but
+    // it's getting to be problematic.
+    //
+    // For now, we shall just suppress the warning.
+    //
+    // But I think a longer-term solution is likely going to be abandoning JSONKit probably for NSJSONSerialization. Apple
+    // seems to want to work to have good performance on their stuff, and according to this: http://www.bonto.ch/blog/2011/12/08/json-libraries-for-ios-comparison-updated/
+    // it seems that the OS's support is pretty good. It'll always work (in theory), be supported, and not have
+    // these problems so.....
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-objc-pointer-introspection"
   BOOL   workAroundMacOSXABIBreakingBug = (JK_EXPECT_F(((NSUInteger)object) & 0x1))     ? YES  : NO;
+#pragma clang diagnostic pop
   void  *objectISA                      = (JK_EXPECT_F(workAroundMacOSXABIBreakingBug)) ? NULL : *((void **)objectPtr);
   if(JK_EXPECT_F(workAroundMacOSXABIBreakingBug)) { goto slowClassLookup; }
 
